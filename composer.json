@@ -1,0 +1,52 @@
+{
+    "name": "craigk5n/git2ics",
+    "description": "Convert git commit history into an RFC 5545 iCalendar (.ics) file",
+    "license": "MIT",
+    "type": "project",
+    "homepage": "https://github.com/craigk5n/git2ics",
+    "keywords": ["git", "icalendar", "ics", "rfc5545", "calendar", "cli"],
+    "support": {
+        "issues": "https://github.com/craigk5n/git2ics/issues",
+        "source": "https://github.com/craigk5n/git2ics"
+    },
+    "require": {
+        "php": ">=8.2",
+        "ext-mbstring": "*",
+        "craigk5n/php-icalendar-core": "^1.1"
+    },
+    "require-dev": {
+        "infection/infection": "^0.29",
+        "phpstan/phpstan": "^1.10 || ^2.0",
+        "phpunit/phpunit": "^10.5",
+        "vimeo/psalm": "^5.0 || ^6.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "K5n\\Git2Ics\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "K5n\\Git2Ics\\Tests\\": "tests/"
+        }
+    },
+    "bin": ["bin/git2ics"],
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "coverage": "vendor/bin/phpunit --coverage-text --coverage-html=build/coverage",
+        "phpstan": "vendor/bin/phpstan analyse --level=9",
+        "psalm": "vendor/bin/psalm",
+        "infection": "vendor/bin/infection --threads=4",
+        "check": [
+            "@test",
+            "@phpstan",
+            "@psalm"
+        ]
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "infection/extension-installer": true
+        }
+    }
+}

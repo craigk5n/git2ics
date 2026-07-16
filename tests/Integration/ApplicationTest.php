@@ -1,0 +1,337 @@
+<?php
+
+declare(strict_types=1);
+
+namespace K5n\Git2Ics\Tests\Integration;
+
+use Icalendar\Parser\Parser;
+use K5n\Git2Ics\Cli\Application;
+use K5n\Git2Ics\Cli\Usage;
+use K5n\Git2Ics\Clock\FrozenClock;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * The whole program, from argv to ICS bytes, against real repositories.
+ */
+#[CoversClass(Application::class)]
+#[CoversClass(Usage::class)]
+final class ApplicationTest extends TestCase
+{
+    private const NOW = '2026-07-16T15:11:22+00:00';
+
+    private string $workspace;
+
+    /** @var resource */
+    private $stdout;
+
+    /** @var resource */
+    private $stderr;
+
+    protected function setUp(): void
+    {
+        $this->workspace = sys_get_temp_dir() . '/git2ics-app-' . bin2hex(random_bytes(6));
+        mkdir($this->workspace, 0o777, true);
+
+        $stdout = fopen('php://memory', 'w+b');
+        $stderr = fopen('php://memory', 'w+b');
+        self::assertIsResource($stdout);
+        self::assertIsResource($stderr);
+        $this->stdout = $stdout;
+        $this->stderr = $stderr;
+    }
+
+    protected function tearDown(): void
+    {
+        GitRepoFixture::remove($this->workspace);
+    }
+
+    /**
+     * @param list<string> $args
+     */
+    private function invoke(array $args): int
+    {
+        return (new Application($this->stdout, $this->stderr, FrozenClock::at(self::NOW)))
+            ->run(['bin/git2ics', ...$args]);
+    }
+
+    /**
+     * @param resource $stream
+     */
+    private function contents($stream): string
+    {
+        rewind($stream);
+
+        return (string) stream_get_contents($stream);
+    }
+
+    private function out(): string
+    {
+        return $this->contents($this->stdout);
+    }
+
+    private function err(): string
+    {
+        return $this->contents($this->stderr);
+    }
+
+    private function repo(string $name = 'repo'): GitRepoFixture
+    {
+        return GitRepoFixture::create($this->workspace . '/' . $name);
+    }
+
+    public function testGeneratesACalendarFromARealRepository(): void
+    {
+        $repo = $this->repo();
+        $repo->commit('first subject', 'a.txt');
+        $repo->commit('second subject', 'b.txt');
+
+        $exit = $this->invoke([$repo->path]);
+
+        self::assertSame(Application::EXIT_SUCCESS, $exit);
+
+        $calendar = (new Parser(Parser::STRICT))->parse($this->out());
+        self::assertCount(2, $calendar->getComponents('VEVENT'));
+    }
+
+    public function testCalendarNameDefaultsToTheRepositoryName(): void
+    {
+        $repo = $this->repo('my-project');
+        $repo->commit('c');
+
+        $this->invoke([$repo->path]);
+
+        self::assertStringContainsString('X-WR-CALNAME:my-project', $this->out());
+    }
+
+    public function testCalendarNameCanBeOverridden(): void
+    {
+        $repo = $this->repo();
+        $repo->commit('c');
+
+        $this->invoke([$repo->path, '--calendar-name=My Work']);
+
+        self::assertStringContainsString('X-WR-CALNAME:My Work', $this->out());
+    }
+
+    public function testEventsAreZeroDurationByDefault(): void
+    {
+        $repo = $this->repo();
+        $repo->commit('c');
+
+        $this->invoke([$repo->path]);
+
+        self::assertStringNotContainsString('DTEND', $this->out());
+        self::assertStringNotContainsString('DURATION', $this->out());
+    }
+
+    public function testDurationFlagAddsDtEnd(): void
+    {
+        $repo = $this->repo();
+        $repo->commit('c', 'a.txt', 'x', authorDate: '2026-01-01T10:00:00+00:00', committerDate: '2026-01-01T10:00:00+00:00');
+
+        $this->invoke([$repo->path, '--duration=15m']);
+
+        self::assertStringContainsString('DTSTART:20260101T100000', $this->out());
+        self::assertStringContainsString('DTEND:20260101T101500', $this->out());
+    }
+
+    public function testFloatingTimeIsTheDefault(): void
+    {
+        $repo = $this->repo();
+        $repo->commit('c', 'a.txt', 'x', authorDate: '2026-01-01T10:00:00+09:00', committerDate: '2026-01-01T10:00:00+09:00');
+
+        $this->invoke([$repo->path]);
+
+        self::assertStringContainsString("DTSTART:20260101T100000\r\n", $this->out());
+    }
+
+    public function testUtcModeConvertsTheInstant(): void
+    {
+        $repo = $this->repo();
+        $repo->commit('c', 'a.txt', 'x', authorDate: '2026-01-01T10:00:00+09:00', committerDate: '2026-01-01T10:00:00+09:00');
+
+        $this->invoke([$repo->path, '--tz=utc']);
+
+        self::assertStringContainsString("DTSTART:20260101T010000Z\r\n", $this->out());
+    }
+
+    public function testVjournalComponent(): void
+    {
+        $repo = $this->repo();
+        $repo->commit('c');
+
+        $this->invoke([$repo->path, '--component=vjournal']);
+
+        $calendar = (new Parser(Parser::STRICT))->parse($this->out());
+        self::assertCount(1, $calendar->getComponents('VJOURNAL'));
+        self::assertSame([], $calendar->getComponents('VEVENT'));
+    }
+
+    public function testOutputFileIsWritten(): void
+    {
+        $repo = $this->repo();
+        $repo->commit('c');
+        $target = $this->workspace . '/out.ics';
+
+        $exit = $this->invoke([$repo->path, '-o', $target]);
+
+        self::assertSame(Application::EXIT_SUCCESS, $exit);
+        self::assertFileExists($target);
+        self::assertSame('', $this->out(), 'nothing goes to stdout when -o is used');
+
+        $calendar = (new Parser(Parser::STRICT))->parse((string) file_get_contents($target));
+        self::assertCount(1, $calendar->getComponents('VEVENT'));
+    }
+
+    public function testUnwritableOutputFileIsAnError(): void
+    {
+        $repo = $this->repo();
+        $repo->commit('c');
+
+        $exit = $this->invoke([$repo->path, '-o', $this->workspace . '/no-such-dir/out.ics']);
+
+        self::assertSame(Application::EXIT_FAILURE, $exit);
+        self::assertStringContainsString('could not open', $this->err());
+    }
+
+    /**
+     * --reproducible exists so the output can be committed or diffed; that is
+     * only true if two runs really are byte-identical.
+     */
+    public function testReproducibleOutputIsByteIdenticalAcrossRuns(): void
+    {
+        $repo = $this->repo();
+        $repo->commit('first', 'a.txt');
+        $repo->commit('second', 'b.txt');
+
+        $first = $this->workspace . '/one.ics';
+        $second = $this->workspace . '/two.ics';
+
+        $this->invoke([$repo->path, '--reproducible', '-o', $first]);
+        $this->invoke([$repo->path, '--reproducible', '-o', $second]);
+
+        self::assertFileEquals($first, $second);
+        self::assertStringNotContainsString('20260716T151122Z', (string) file_get_contents($first), 'DTSTAMP is pinned to the commit, not to now');
+    }
+
+    public function testDefaultDtStampIsGenerationTime(): void
+    {
+        $repo = $this->repo();
+        $repo->commit('c');
+
+        $this->invoke([$repo->path]);
+
+        self::assertStringContainsString('DTSTAMP:20260716T151122Z', $this->out());
+    }
+
+    public function testShallowCloneEmitsAWarningButStillSucceeds(): void
+    {
+        $origin = $this->repo('origin');
+        $origin->commit('first', 'a.txt');
+        $origin->commit('second', 'b.txt');
+
+        $shallow = $this->workspace . '/shallow';
+        $cloner = $this->repo('cloner');
+        $cloner->git(['clone', '-q', '--depth', '1', 'file://' . $origin->path, $shallow]);
+
+        $exit = $this->invoke([$shallow]);
+
+        self::assertSame(Application::EXIT_SUCCESS, $exit);
+        self::assertStringContainsString('shallow', $this->err());
+        self::assertStringContainsString('unshallow', $this->err(), 'the warning should say how to fix it');
+        self::assertStringContainsString('BEGIN:VEVENT', $this->out(), 'a warning must not suppress output');
+    }
+
+    public function testEmptyRepositoryProducesAnEmptyCalendar(): void
+    {
+        $repo = $this->repo();
+
+        $exit = $this->invoke([$repo->path]);
+
+        self::assertSame(Application::EXIT_SUCCESS, $exit);
+        self::assertStringContainsString('BEGIN:VCALENDAR', $this->out());
+        self::assertStringNotContainsString('BEGIN:VEVENT', $this->out());
+    }
+
+    public function testNotARepositoryIsReportedAsAFailure(): void
+    {
+        $plain = $this->workspace . '/plain';
+        mkdir($plain);
+
+        $exit = $this->invoke([$plain]);
+
+        self::assertSame(Application::EXIT_FAILURE, $exit);
+        self::assertStringContainsString('not a git repository', $this->err());
+        self::assertSame('', $this->out());
+    }
+
+    public function testUsageErrorExitsWithCodeTwoAndSuggestsHelp(): void
+    {
+        $exit = $this->invoke(['--nonsense']);
+
+        self::assertSame(Application::EXIT_USAGE, $exit);
+        self::assertStringContainsString('--nonsense', $this->err());
+        self::assertStringContainsString('--help', $this->err());
+    }
+
+    public function testHelp(): void
+    {
+        $exit = $this->invoke(['--help']);
+
+        self::assertSame(Application::EXIT_SUCCESS, $exit);
+        self::assertStringContainsString('USAGE', $this->out());
+        self::assertStringContainsString('--component', $this->out());
+        self::assertStringContainsString('--duration', $this->out());
+        self::assertSame('', $this->err());
+    }
+
+    public function testVersion(): void
+    {
+        $exit = $this->invoke(['--version']);
+
+        self::assertSame(Application::EXIT_SUCCESS, $exit);
+        self::assertStringContainsString('git2ics', $this->out());
+    }
+
+    public function testUnicodeSurvivesTheEntirePipeline(): void
+    {
+        $subject = 'fix: 日本語のバグ 🎉';
+        $repo = $this->repo();
+        $repo->commit($subject);
+
+        $this->invoke([$repo->path]);
+        $ics = $this->out();
+
+        self::assertTrue(mb_check_encoding($ics, 'UTF-8'), 'output must be valid UTF-8');
+
+        $calendar = (new Parser(Parser::STRICT))->parse($ics);
+        self::assertSame(
+            $subject,
+            $calendar->getComponents('VEVENT')[0]->getProperty('SUMMARY')?->getValue()->getRawValue(),
+        );
+    }
+
+    public function testCommitUrlIsDerivedFromTheRemote(): void
+    {
+        $repo = $this->repo();
+        $sha = $repo->commit('c');
+        $repo->setRemote('git@github.com:craigk5n/ilibgo.git');
+
+        $this->invoke([$repo->path]);
+
+        self::assertStringContainsString('github.com/craigk5n/ilibgo/commit', str_replace("\r\n ", '', $this->out()));
+    }
+
+    public function testLogFiltersAreApplied(): void
+    {
+        $repo = $this->repo();
+        $repo->commit('old', 'old.txt', 'x', authorDate: '2020-01-01T10:00:00+00:00', committerDate: '2020-01-01T10:00:00+00:00');
+        $repo->commit('new', 'new.txt', 'x', authorDate: '2026-01-01T10:00:00+00:00', committerDate: '2026-01-01T10:00:00+00:00');
+
+        $this->invoke([$repo->path, '--since=2025-01-01']);
+
+        self::assertStringContainsString('SUMMARY:new', $this->out());
+        self::assertStringNotContainsString('SUMMARY:old', $this->out());
+    }
+}

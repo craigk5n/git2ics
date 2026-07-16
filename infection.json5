@@ -1,0 +1,31 @@
+{
+    "$schema": "vendor/infection/infection/resources/schema.json",
+    "source": {
+        "directories": [
+            "src"
+        ]
+    },
+    "mutators": {
+        "@default": true
+    },
+    // Covered Code MSI sits at 98%. The residue is four mutants that are
+    // equivalent, or unobservable from a test:
+    //   Commit::body()      — `$break + 1` vs `+ 0`, masked by the trim("\n")
+    //   CommitUrlBuilder    — a redundant `$` anchor after a greedy `.+`
+    //   GitCommandRunner x2 — dropping the /dev/null stdin descriptor. That
+    //     redirect stops git blocking on a credential prompt or pager when it
+    //     inherits an interactive terminal; CI stdin is never a terminal, so no
+    //     test can observe its absence. Kept deliberately.
+    // MSI is a couple of points below Covered MSI because Infection counts the
+    // @codeCoverageIgnore'd proc_open failure branches as uncovered.
+    "minMsi": 92,
+    "minCoveredMsi": 95,
+    "testFramework": "phpunit",
+    "logs": {
+        "text": "build/infection.log",
+        "stryker": {
+            "report": "main"
+        }
+    },
+    "tmpDir": "build/infection"
+}
