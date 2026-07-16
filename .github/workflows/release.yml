@@ -85,7 +85,7 @@ jobs:
           generate_release_notes: true
 
       - name: Upload PHAR as a build artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: git2ics-phar
           path: build/git2ics.phar
