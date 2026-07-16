@@ -49,6 +49,10 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Full history so the smoke test has real commits to convert, and so
+          # box can read tags. A shallow clone would make it a one-commit test.
+          fetch-depth: 0
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -67,14 +71,34 @@ jobs:
       - name: Build PHAR
         run: box compile --no-parallel
 
+      # The whole point of a PHAR is that it carries its dependencies. Assert it
+      # directly: box silently omits vendor/ if autodiscovery is disabled, and
+      # the result only fails at runtime.
+      - name: Verify the PHAR bundles its dependencies
+        run: |
+          php -r '
+          $phar = new Phar("build/git2ics.phar");
+          $vendor = 0;
+          foreach (new RecursiveIteratorIterator($phar) as $file) {
+              if (str_contains($file->getPathname(), "/vendor/")) { $vendor++; }
+          }
+          echo "vendor files bundled: {$vendor}\n";
+          if ($vendor === 0) {
+              echo "::error::the PHAR contains no vendor/ files, so it will fatal on first use\n";
+              exit(1);
+          }
+          '
+
       - name: Smoke test the PHAR
         run: |
           chmod +x build/git2ics.phar
           ./build/git2ics.phar --version
-          # A real end-to-end run against this very repository.
+          # A real end-to-end run against this very repository. --version alone
+          # would pass even with vendor/ missing, since it touches no library code.
           ./build/git2ics.phar . --max-count=5 > /tmp/out.ics
           grep -q 'BEGIN:VCALENDAR' /tmp/out.ics
           grep -q 'BEGIN:VEVENT' /tmp/out.ics
+          grep -q 'DTSTART:.*Z' /tmp/out.ics
           echo "PHAR smoke test passed"
 
       - name: Attach PHAR to the release
