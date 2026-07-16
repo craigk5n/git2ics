@@ -118,11 +118,15 @@ The integration tests build real git repositories with pinned author and
 committer identities and timestamps, which makes commit SHAs byte-for-byte
 reproducible and golden files viable.
 
-That requires `GIT_CONFIG_GLOBAL` and `GIT_CONFIG_SYSTEM` to point at
-`/dev/null`. Without them, your own `~/.gitconfig` leaks in — `commit.gpgsign`
-or `core.autocrlf` change the resulting SHAs, and fixtures then pass locally
-while failing in CI for reasons that look like magic. `GitRepoFixture` handles
-this; if you add a test that runs git another way, pin the same variables.
+That requires isolating git from your own `~/.gitconfig` — `commit.gpgsign` or
+`core.autocrlf` change the resulting SHAs, and fixtures then pass on one machine
+while failing on another for reasons that look like magic.
+
+`GitRepoFixture` handles this itself: it passes an explicit environment
+(`GIT_CONFIG_GLOBAL`, `GIT_CONFIG_SYSTEM`, `LC_ALL`, and the author/committer
+identity and dates) to every git subprocess it spawns, so the suite is
+deterministic regardless of how you run it. If you add a test that shells out to
+git another way, pin the same variables.
 
 `phpunit.xml` also pins `date.timezone=UTC` so results never depend on the host.
 

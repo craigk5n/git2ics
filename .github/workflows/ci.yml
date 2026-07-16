@@ -19,8 +19,13 @@ env:
   # .ics files containing real commit SHAs. A runner's global or system
   # gitconfig (commit.gpgsign, core.autocrlf) silently changes those SHAs, so
   # pin it away. See tests/Integration/GitRepoFixture.php.
-  GIT_CONFIG_GLOBAL: /dev/null
-  GIT_CONFIG_SYSTEM: /dev/null
+  # Isolate git from the runner's own config: commit.gpgsign or core.autocrlf
+  # would change the commit SHAs the integration suite asserts on.
+  # These paths start non-existent, which git reads as empty config, but are
+  # writable -- unlike /dev/null, which actions/checkout cannot lock when it
+  # sets safe.directory, producing a warning on every run.
+  GIT_CONFIG_GLOBAL: /tmp/git2ics-ci-global-gitconfig
+  GIT_CONFIG_SYSTEM: /tmp/git2ics-ci-system-gitconfig
   LC_ALL: C.UTF-8
 
 jobs:
