@@ -1,0 +1,18 @@
+{
+    "main": "bin/git2ics",
+    "output": "build/git2ics.phar",
+    "compression": "GZ",
+    "banner": "git2ics — turn git history into an RFC 5545 iCalendar file.\n\n(c) Craig Knudsen\n\nThis source file is subject to the MIT license that is bundled\nwith this source code in the file LICENSE.",
+    "directories": ["src"],
+    "files": ["LICENSE"],
+    "blacklist": [
+        "tests",
+        "build",
+        ".github"
+    ],
+    "compactors": [
+        "KevinGH\\Box\\Compactor\\Php",
+        "KevinGH\\Box\\Compactor\\Json"
+    ],
+    "git-version": "package_version"
+}

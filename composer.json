@@ -2,12 +2,21 @@
     "name": "craigk5n/git2ics",
     "description": "Convert git commit history into an RFC 5545 iCalendar (.ics) file",
     "license": "MIT",
-    "type": "project",
+    "type": "library",
     "homepage": "https://github.com/craigk5n/git2ics",
-    "keywords": ["git", "icalendar", "ics", "rfc5545", "calendar", "cli"],
+    "keywords": ["git", "icalendar", "ics", "rfc5545", "calendar", "cli", "vevent", "vjournal"],
+    "authors": [
+        {
+            "name": "Craig Knudsen",
+            "email": "craigk5n@gmail.com",
+            "homepage": "https://www.k5n.us",
+            "role": "Developer"
+        }
+    ],
     "support": {
         "issues": "https://github.com/craigk5n/git2ics/issues",
-        "source": "https://github.com/craigk5n/git2ics"
+        "source": "https://github.com/craigk5n/git2ics",
+        "docs": "https://github.com/craigk5n/git2ics#readme"
     },
     "require": {
         "php": ">=8.2",
@@ -15,6 +24,7 @@
         "craigk5n/php-icalendar-core": "^1.1"
     },
     "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.95",
         "infection/infection": "^0.29",
         "phpstan/phpstan": "^1.10 || ^2.0",
         "phpunit/phpunit": "^10.5",
@@ -36,12 +46,27 @@
         "coverage": "vendor/bin/phpunit --coverage-text --coverage-html=build/coverage",
         "phpstan": "vendor/bin/phpstan analyse --level=9",
         "psalm": "vendor/bin/psalm",
+        "cs": "vendor/bin/php-cs-fixer fix --dry-run --diff --allow-risky=yes",
+        "cs-fix": "vendor/bin/php-cs-fixer fix --allow-risky=yes",
         "infection": "vendor/bin/infection --threads=4",
+        "phar": "box compile",
         "check": [
             "@test",
             "@phpstan",
-            "@psalm"
+            "@psalm",
+            "@cs"
         ]
+    },
+    "scripts-descriptions": {
+        "test": "Run the PHPUnit test suite",
+        "coverage": "Run tests with a coverage report (src/ is at 100%)",
+        "phpstan": "Static analysis at level 9, the maximum",
+        "psalm": "Static analysis at errorLevel 1, the strictest",
+        "cs": "Check PSR-12 compliance without changing anything",
+        "cs-fix": "Fix PSR-12 violations in place",
+        "infection": "Mutation testing — does the suite actually catch bugs?",
+        "phar": "Build a standalone git2ics.phar (requires box)",
+        "check": "Everything CI runs, short of coverage and mutation testing"
     },
     "config": {
         "sort-packages": true,
