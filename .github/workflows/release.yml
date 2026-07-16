@@ -1,0 +1,92 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build (for a dry run)'
+        required: false
+
+permissions:
+  contents: read
+
+env:
+  GIT_CONFIG_GLOBAL: /dev/null
+  GIT_CONFIG_SYSTEM: /dev/null
+  LC_ALL: C.UTF-8
+
+jobs:
+  # Never ship a tag that does not pass its own tests.
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Run tests
+        run: vendor/bin/phpunit --no-coverage
+
+      - name: Static analysis
+        run: composer phpstan
+
+  phar:
+    name: Build PHAR
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring
+          coverage: none
+          # box needs to write a .phar, which the default INI forbids.
+          ini-values: phar.readonly=0
+          tools: box
+
+      # Production dependencies only: no PHPUnit or Psalm inside the artifact.
+      - name: Install production dependencies
+        run: composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader
+
+      - name: Build PHAR
+        run: box compile --no-parallel
+
+      - name: Smoke test the PHAR
+        run: |
+          chmod +x build/git2ics.phar
+          ./build/git2ics.phar --version
+          # A real end-to-end run against this very repository.
+          ./build/git2ics.phar . --max-count=5 > /tmp/out.ics
+          grep -q 'BEGIN:VCALENDAR' /tmp/out.ics
+          grep -q 'BEGIN:VEVENT' /tmp/out.ics
+          echo "PHAR smoke test passed"
+
+      - name: Attach PHAR to the release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/git2ics.phar
+          generate_release_notes: true
+
+      - name: Upload PHAR as a build artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: git2ics-phar
+          path: build/git2ics.phar
+          retention-days: 14
