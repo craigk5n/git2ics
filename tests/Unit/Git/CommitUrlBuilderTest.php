@@ -69,7 +69,7 @@ final class CommitUrlBuilderTest extends TestCase
             'git@git.example.com:me/thing.git',
             null,
         ];
-        yield 'local path has no web view' => ['/home/cknudsen/programs/ilibgo', null];
+        yield 'local path has no web view' => ['/home/user/projects/thing', null];
         yield 'empty remote' => ['', null];
 
         // A bare host cannot name a repository. Without an explicit owner/repo

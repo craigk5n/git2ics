@@ -61,7 +61,7 @@ final class ArgumentParserTest extends TestCase
 
     public function testRepositoryPathPositional(): void
     {
-        self::assertSame('/home/cknudsen/programs/ilibgo', $this->parse(['/home/cknudsen/programs/ilibgo'])->repositoryPath);
+        self::assertSame('/home/user/projects/thing', $this->parse(['/home/user/projects/thing'])->repositoryPath);
     }
 
     public function testSecondPositionalIsRejected(): void
