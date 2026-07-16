@@ -1,0 +1,110 @@
+name: Bug Report
+description: Report a bug in git2ics
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear description of the bug.
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    attributes:
+      label: Command
+      description: The exact git2ics command you ran.
+      placeholder: git2ics ~/projects/thing --since=2026-01-01 --component=vjournal
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What actually happened. Include any error message in full.
+    validations:
+      required: true
+
+  - type: textarea
+    id: ics-output
+    attributes:
+      label: Generated output
+      description: >
+        The relevant part of the .ics that git2ics produced, if applicable.
+        A single BEGIN:VEVENT...END:VEVENT block is usually enough. Please
+        redact anything private — commit subjects and author emails end up in
+        the output.
+      render: text
+    validations:
+      required: false
+
+  - type: dropdown
+    id: php-version
+    attributes:
+      label: PHP version
+      options:
+        - "8.2"
+        - "8.3"
+        - "8.4"
+        - "other (please say so in the description)"
+    validations:
+      required: true
+
+  - type: input
+    id: git-version
+    attributes:
+      label: git version
+      description: Output of `git --version`. git2ics shells out to git, so this matters.
+      placeholder: git version 2.34.1
+    validations:
+      required: true
+
+  - type: input
+    id: git2ics-version
+    attributes:
+      label: git2ics version
+      description: Output of `git2ics --version`.
+      placeholder: git2ics 1.0.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install-method
+    attributes:
+      label: How did you install git2ics?
+      options:
+        - Composer
+        - PHAR
+        - From source
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: repository-characteristics
+    attributes:
+      label: Does anything below describe the repository?
+      description: >
+        These are the cases most likely to be involved, so ticking one helps a
+        lot. Skip if none apply.
+      options:
+        - label: It is a shallow clone (`git rev-parse --is-shallow-repository` prints true)
+        - label: It is a bare repository
+        - label: It has no commits yet
+        - label: HEAD is detached
+        - label: It contains merge commits
+        - label: Commit messages contain non-ASCII text (accents, CJK, emoji)
+        - label: Commit messages have a non-UTF-8 `encoding` header
+        - label: Some commits have an empty message
+    validations:
+      required: false

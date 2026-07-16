@@ -1,5 +1,15 @@
 # git2ics
 
+[![CI](https://github.com/craigk5n/git2ics/actions/workflows/ci.yml/badge.svg)](https://github.com/craigk5n/git2ics/actions/workflows/ci.yml)
+[![Latest Version](https://img.shields.io/packagist/v/craigk5n/git2ics.svg)](https://packagist.org/packages/craigk5n/git2ics)
+[![Downloads](https://img.shields.io/packagist/dt/craigk5n/git2ics.svg)](https://packagist.org/packages/craigk5n/git2ics)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![PHP Version](https://img.shields.io/badge/php-%3E%3D8.2-8892BF.svg)](https://www.php.net/)
+[![PHPStan Level 9](https://img.shields.io/badge/PHPStan-level%209-brightgreen.svg)](https://phpstan.org/)
+[![Psalm errorLevel 1](https://img.shields.io/badge/Psalm-errorLevel%201-brightgreen.svg)](https://psalm.dev/)
+[![Coverage 100%](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](#development)
+[![Code Style PSR-12](https://img.shields.io/badge/code%20style-PSR--12-blue.svg)](https://www.php-fig.org/psr/psr-12/)
+
 Turn git history into an RFC 5545 iCalendar file.
 
 ```bash
@@ -27,11 +37,21 @@ END:VCALENDAR
 
 ## Install
 
+**Composer:**
+
 ```bash
 composer global require craigk5n/git2ics
 ```
 
-Requires PHP 8.2+ and `git` on the PATH.
+**Standalone PHAR** — no Composer, no dependencies:
+
+```bash
+curl -L -o git2ics https://github.com/craigk5n/git2ics/releases/latest/download/git2ics.phar
+chmod +x git2ics
+./git2ics --version
+```
+
+Requires PHP 8.2+ with `mbstring`, and `git` on the PATH.
 
 ## Usage
 
@@ -91,9 +111,13 @@ composer test         # PHPUnit
 composer coverage     # 100% of src/
 composer phpstan      # level 9
 composer psalm        # errorLevel 1
+composer cs           # PSR-12 check
+composer cs-fix       # PSR-12, fixing in place
 composer infection    # mutation testing
-composer check        # test + phpstan + psalm
+composer check        # test + phpstan + psalm + cs
 ```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development guide.
 
 The test suite builds real git repositories with pinned identities and
 timestamps so commit SHAs are byte-for-byte reproducible. That requires
@@ -110,10 +134,21 @@ servers and CI). git2ics's *output* is correct and unaffected — the bug is
 parse-side only. `RoundTripTest::testFloatingDtStartIsPromotedToUtcByTheParser`
 pins the current behaviour and will fail when the library is fixed.
 
+## Contributing
+
+Bug reports, feature requests and pull requests are welcome — see
+[CONTRIBUTING.md](CONTRIBUTING.md). Please report security issues privately, per
+[SECURITY.md](SECURITY.md).
+
+This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md).
+
 ## Credits
 
-Built on [craigk5n/php-icalendar-core](https://github.com/craigk5n/php-icalendar-core).
+Built on [craigk5n/php-icalendar-core](https://github.com/craigk5n/php-icalendar-core),
+whose line folding handles multi-byte characters correctly — the reason git2ics
+is written in PHP. Bugs found in it while building this are documented in
+[ISSUES.md](ISSUES.md).
 
 ## License
 
-MIT
+[MIT](LICENSE)

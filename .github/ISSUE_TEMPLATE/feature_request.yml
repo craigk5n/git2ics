@@ -1,0 +1,53 @@
+name: Feature Request
+description: Suggest a new feature or improvement
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What feature would you like, and why?
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use case
+      description: Describe the problem or workflow this feature would address.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed solution
+      description: How do you think this should work? A sample command line helps.
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Anything you have already tried, or other ways to solve this.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: client
+    attributes:
+      label: Which calendar client would consume this?
+      description: >
+        Useful context — clients disagree considerably about zero-duration
+        events and VJOURNAL support.
+      options:
+        - WebCalendar
+        - agenticdaisy-calendar (WordPress)
+        - Thunderbird
+        - Google Calendar
+        - Apple Calendar
+        - Outlook
+        - Other / not client-specific
+    validations:
+      required: false
