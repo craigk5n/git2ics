@@ -21,7 +21,7 @@ final readonly class Config
         public ?string $outputFile = null,
         public ComponentType $component = ComponentType::Vevent,
         public DateSource $dateSource = DateSource::Author,
-        public TimezoneMode $timezoneMode = TimezoneMode::Floating,
+        public TimezoneMode $timezoneMode = TimezoneMode::Utc,
         public ?string $duration = null,
         public LogQuery $query = new LogQuery(),
         public ?string $calendarName = null,

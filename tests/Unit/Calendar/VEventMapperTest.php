@@ -23,7 +23,7 @@ final class VEventMapperTest extends TestCase
     private const NOW = '2026-07-16T15:11:22+00:00';
 
     private function mapper(
-        TimezoneMode $tz = TimezoneMode::Floating,
+        TimezoneMode $tz = TimezoneMode::Utc,
         DateSource $dateSource = DateSource::Author,
         ?string $duration = null,
         bool $reproducible = false,
@@ -84,23 +84,31 @@ final class VEventMapperTest extends TestCase
         self::assertSame('afb87de', $this->propertyValue($this->mapper()->map($commit), 'SUMMARY'));
     }
 
-    public function testDtStartUsesFloatingLocalTimeByDefault(): void
+    /**
+     * git records an author date with an explicit offset, so it hands us an
+     * unambiguous instant. UTC preserves that instant exactly.
+     */
+    public function testDtStartIsUtcByDefault(): void
     {
         $commit = CommitFactory::create(authorDate: '2026-01-01T10:00:00+09:00');
 
         self::assertSame(
-            '20260101T100000',
+            '20260101T010000Z',
             $this->propertyValue($this->mapper()->map($commit), 'DTSTART'),
-            'a 10:00 commit must read 10:00',
+            '10:00+09:00 is 01:00 UTC — the same instant, losing nothing',
         );
     }
 
-    public function testDtStartInUtcMode(): void
+    /**
+     * Floating keeps the wall clock but discards the offset git gave us, so the
+     * event stops being a fixed instant. Available, not the default.
+     */
+    public function testDtStartInFloatingMode(): void
     {
         $commit = CommitFactory::create(authorDate: '2026-01-01T10:00:00+09:00');
-        $mapper = $this->mapper(tz: TimezoneMode::Utc);
+        $mapper = $this->mapper(tz: TimezoneMode::Floating);
 
-        self::assertSame('20260101T010000Z', $this->propertyValue($mapper->map($commit), 'DTSTART'));
+        self::assertSame('20260101T100000', $this->propertyValue($mapper->map($commit), 'DTSTART'));
     }
 
     public function testDtStartUsesTheAuthorDateByDefault(): void
@@ -110,7 +118,7 @@ final class VEventMapperTest extends TestCase
             committerDate: '2026-06-06T06:06:06+00:00',
         );
 
-        self::assertSame('20260101T100000', $this->propertyValue($this->mapper()->map($commit), 'DTSTART'));
+        self::assertSame('20260101T100000Z', $this->propertyValue($this->mapper()->map($commit), 'DTSTART'));
     }
 
     public function testDtStartCanUseTheCommitterDate(): void
@@ -121,7 +129,7 @@ final class VEventMapperTest extends TestCase
         );
         $mapper = $this->mapper(dateSource: DateSource::Committer);
 
-        self::assertSame('20260606T060606', $this->propertyValue($mapper->map($commit), 'DTSTART'));
+        self::assertSame('20260606T060606Z', $this->propertyValue($mapper->map($commit), 'DTSTART'));
     }
 
     /**
@@ -142,15 +150,15 @@ final class VEventMapperTest extends TestCase
         $commit = CommitFactory::create(authorDate: '2026-01-01T10:00:00+09:00');
         $mapper = $this->mapper(duration: 'PT15M');
 
-        self::assertSame('20260101T101500', $this->propertyValue($mapper->map($commit), 'DTEND'));
+        self::assertSame('20260101T011500Z', $this->propertyValue($mapper->map($commit), 'DTEND'));
     }
 
-    public function testDurationRespectsUtcMode(): void
+    public function testDurationRespectsFloatingMode(): void
     {
         $commit = CommitFactory::create(authorDate: '2026-01-01T10:00:00+09:00');
-        $mapper = $this->mapper(tz: TimezoneMode::Utc, duration: 'PT1H');
+        $mapper = $this->mapper(tz: TimezoneMode::Floating, duration: 'PT1H');
 
-        self::assertSame('20260101T020000Z', $this->propertyValue($mapper->map($commit), 'DTEND'));
+        self::assertSame('20260101T110000', $this->propertyValue($mapper->map($commit), 'DTEND'));
     }
 
     /**
@@ -231,7 +239,7 @@ final class VEventMapperTest extends TestCase
             urlBuilder: $urlBuilder,
             clock: FrozenClock::at(self::NOW),
             dateSource: DateSource::Author,
-            timezoneMode: TimezoneMode::Floating,
+            timezoneMode: TimezoneMode::Utc,
         );
 
         $event = $mapper->map(CommitFactory::create(authorDate: '2026-01-01T10:00:00+09:00'));

@@ -22,7 +22,7 @@ final class VJournalMapperTest extends TestCase
     private const NOW = '2026-07-16T15:11:22+00:00';
 
     private function mapper(
-        TimezoneMode $tz = TimezoneMode::Floating,
+        TimezoneMode $tz = TimezoneMode::Utc,
         DateSource $dateSource = DateSource::Author,
         bool $reproducible = false,
         ?string $remote = null,
@@ -75,11 +75,21 @@ final class VJournalMapperTest extends TestCase
         self::assertSame('afb87de', $this->propertyValue($this->mapper()->map($commit), 'SUMMARY'));
     }
 
-    public function testDtStartUsesFloatingLocalTimeByDefault(): void
+    public function testDtStartIsUtcByDefault(): void
     {
         $commit = CommitFactory::create(authorDate: '2026-01-01T10:00:00+09:00');
 
-        self::assertSame('20260101T100000', $this->propertyValue($this->mapper()->map($commit), 'DTSTART'));
+        self::assertSame('20260101T010000Z', $this->propertyValue($this->mapper()->map($commit), 'DTSTART'));
+    }
+
+    public function testDtStartInFloatingMode(): void
+    {
+        $commit = CommitFactory::create(authorDate: '2026-01-01T10:00:00+09:00');
+
+        self::assertSame(
+            '20260101T100000',
+            $this->propertyValue($this->mapper(tz: TimezoneMode::Floating)->map($commit), 'DTSTART'),
+        );
     }
 
     public function testDtStartCanUseTheCommitterDate(): void
@@ -90,7 +100,7 @@ final class VJournalMapperTest extends TestCase
         );
 
         self::assertSame(
-            '20260606T060606',
+            '20260606T060606Z',
             $this->propertyValue($this->mapper(dateSource: DateSource::Committer)->map($commit), 'DTSTART'),
         );
     }

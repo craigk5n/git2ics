@@ -39,8 +39,10 @@ final class Usage
         TIME
               --date=SOURCE       author | committer           (default: author)
                                   author survives rebases; committer does not
-              --tz=MODE           local | utc                  (default: local)
-                                  local keeps the wall clock the commit was made at
+              --tz=MODE           utc | local                  (default: utc)
+                                  utc preserves the exact instant git recorded;
+                                  local emits floating time, keeping the wall
+                                  clock but discarding the offset
               --reproducible      pin DTSTAMP to the commit time, so repeated runs
                                   produce byte-identical output
 

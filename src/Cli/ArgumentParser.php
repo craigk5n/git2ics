@@ -226,7 +226,7 @@ final class ArgumentParser
             outputFile: $values['output'] ?? null,
             component: $this->enumValue(ComponentType::class, 'component', $values['component'] ?? null, ComponentType::Vevent),
             dateSource: $this->enumValue(DateSource::class, 'date', $values['date'] ?? null, DateSource::Author),
-            timezoneMode: $this->enumValue(TimezoneMode::class, 'tz', $values['tz'] ?? null, TimezoneMode::Floating),
+            timezoneMode: $this->enumValue(TimezoneMode::class, 'tz', $values['tz'] ?? null, TimezoneMode::Utc),
             duration: isset($values['duration']) ? DurationSpec::toIso8601($values['duration']) : null,
             query: new LogQuery(
                 since: $values['since'] ?? null,

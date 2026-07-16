@@ -20,8 +20,11 @@ treated as interface changes and called out explicitly.
   commit more precisely — dated text with no duration.
 - `--duration=SPEC` (`15m`, `1h30m`, or ISO 8601) for clients that render
   zero-duration events poorly.
-- `--tz=local|utc`. Default `local` emits floating local time, so a commit made
-  at 09:00 reads 09:00 rather than shifting to the reader's offset.
+- `--tz=utc|local`. Default `utc`: git records an author date with an explicit
+  offset, so it hands us an unambiguous instant, and UTC carries it across
+  exactly. `local` emits floating time instead, keeping the literal wall clock
+  but discarding the offset — and, as of php-icalendar-core 1.1.5, being read
+  back nine hours adrift (ISSUES.md #1).
 - `--date=author|committer`. Default `author`, which survives rebase,
   cherry-pick and amend.
 - `--reproducible` pins `DTSTAMP` to the commit time, making output

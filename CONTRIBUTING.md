@@ -95,8 +95,9 @@ Two rules of thumb:
   it must still round-trip.
 - **Property semantics are a compatibility contract.** `UID` is the commit SHA so
   re-imports update rather than duplicate. `DTSTAMP` is generation time because
-  RFC 5545 uses it as the update tiebreaker at equal `SEQUENCE`. `DTSTART` is
-  floating local time so a commit made at 09:00 reads 09:00. Changing any of
+  RFC 5545 uses it as the update tiebreaker at equal `SEQUENCE`, and is always
+  UTC per §3.8.7.2. `DTSTART` is UTC because git records an explicit offset, so
+  the instant is unambiguous and converting preserves it exactly. Changing any of
   these changes what happens in users' calendars — please open an issue first.
 
 ### Commit messages

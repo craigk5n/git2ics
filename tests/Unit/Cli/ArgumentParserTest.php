@@ -53,7 +53,7 @@ final class ArgumentParserTest extends TestCase
         self::assertTrue($config->writesToStdout());
         self::assertSame(ComponentType::Vevent, $config->component);
         self::assertSame(DateSource::Author, $config->dateSource);
-        self::assertSame(TimezoneMode::Floating, $config->timezoneMode);
+        self::assertSame(TimezoneMode::Utc, $config->timezoneMode, 'UTC preserves the instant git gives us');
         self::assertNull($config->duration, 'zero-duration is the default');
         self::assertFalse($config->reproducible);
         self::assertSame('git2ics.k5n.us', $config->uidDomain);

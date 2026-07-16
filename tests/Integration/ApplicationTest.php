@@ -136,24 +136,46 @@ final class ApplicationTest extends TestCase
         self::assertStringContainsString('DTEND:20260101T101500', $this->out());
     }
 
-    public function testFloatingTimeIsTheDefault(): void
+    /**
+     * git gives an author date with an explicit offset, so the instant is
+     * unambiguous. UTC carries it across without loss.
+     */
+    public function testUtcIsTheDefault(): void
     {
         $repo = $this->repo();
         $repo->commit('c', 'a.txt', 'x', authorDate: '2026-01-01T10:00:00+09:00', committerDate: '2026-01-01T10:00:00+09:00');
 
         $this->invoke([$repo->path]);
 
-        self::assertStringContainsString("DTSTART:20260101T100000\r\n", $this->out());
+        self::assertStringContainsString("DTSTART:20260101T010000Z\r\n", $this->out());
     }
 
-    public function testUtcModeConvertsTheInstant(): void
+    public function testLocalModeEmitsFloatingTime(): void
     {
         $repo = $this->repo();
         $repo->commit('c', 'a.txt', 'x', authorDate: '2026-01-01T10:00:00+09:00', committerDate: '2026-01-01T10:00:00+09:00');
 
-        $this->invoke([$repo->path, '--tz=utc']);
+        $this->invoke([$repo->path, '--tz=local']);
 
-        self::assertStringContainsString("DTSTART:20260101T010000Z\r\n", $this->out());
+        self::assertStringContainsString("DTSTART:20260101T100000\r\n", $this->out());
+    }
+
+    /**
+     * The end-to-end consequence of the default: what we write is what a parser
+     * reads back. Floating output is corrupted on the way back in by
+     * php-icalendar-core 1.1.5 (ISSUES.md #1); UTC is not.
+     */
+    public function testDefaultOutputSurvivesAParseRoundTrip(): void
+    {
+        $repo = $this->repo();
+        $repo->commit('c', 'a.txt', 'x', authorDate: '2026-01-01T10:00:00+09:00', committerDate: '2026-01-01T10:00:00+09:00');
+
+        $this->invoke([$repo->path]);
+
+        $calendar = (new Parser(Parser::STRICT))->parse($this->out());
+        $dtstart = $calendar->getComponents('VEVENT')[0]->getProperty('DTSTART')?->getValue()->getRawValue();
+
+        self::assertSame('20260101T010000Z', $dtstart, 'the instant must survive being read back');
     }
 
     public function testVjournalComponent(): void

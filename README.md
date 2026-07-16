@@ -26,8 +26,8 @@ VERSION:2.0
 X-WR-CALNAME:ilibgo
 BEGIN:VEVENT
 UID:5b222d4809a213155a3e2dabca2e77e61c4f1b2a@git2ics.k5n.us
-DTSTAMP:20260716T171747Z
-DTSTART:20260629T093852
+DTSTAMP:20260716T183234Z
+DTSTART:20260629T133852Z
 SUMMARY:feat: add wordcloud client tool
 DESCRIPTION:Generate a word cloud PNG from a JSON config...
 URL:https://github.com/craigk5n/ilibgo/commit/5b222d4809a213155a3e2dabca2e77e61c4f1b2a
@@ -79,11 +79,15 @@ makes a `DATE-TIME` `DTSTART` with no `DTEND` exactly that, and it is the
 default. Some clients render zero-duration events poorly; `--duration=15m`
 gives them a visible length if yours is one of them.
 
-**Floating local time.** `DTSTART` is written as floating local time
-(§3.3.5 form 1), so a commit made at 09:00 reads as 09:00 — which is the
-question this tool exists to answer. `--tz=utc` emits absolute UTC instants
-instead, which is correct across timezones but re-renders every commit at
-whatever hour the reader's offset implies.
+**UTC timestamps.** git records an author date with an explicit offset —
+`14:46:02+09:00` — so it hands us an unambiguous instant. `DTSTART` is written
+as UTC (§3.3.5 form 2), which carries that instant across exactly; a client that
+knows the reader's timezone renders it back at the right wall clock.
+
+`--tz=local` emits floating time instead, keeping the literal wall clock but
+discarding the offset git gave us, so the event stops being a fixed instant.
+TZID would be the third option, but git only provides an offset and a zone name
+cannot be derived from one (+09:00 could be Tokyo, Seoul or Yakutsk).
 
 **Author dates by default.** The author date is when the work was written and
 survives rebase, cherry-pick and amend; the committer date collapses onto the
