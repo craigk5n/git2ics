@@ -2,11 +2,11 @@
 
 ## Supported versions
 
-git2ics is pre-1.0. Security fixes land on the latest release.
+Security fixes land on the latest release.
 
 | Version | Supported |
 | ------- | --------- |
-| 0.1.x   | ✅        |
+| 1.x     | ✅        |
 
 ## Reporting a vulnerability
 

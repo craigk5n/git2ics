@@ -11,6 +11,16 @@ treated as interface changes and called out explicitly.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-07-16
+
+First stable release. The CLI surface and the generated `.ics` are covered by
+semantic versioning from here: `UID`, `DTSTAMP` and `DTSTART` semantics will not
+change without a major bump.
+
+Verified end to end against the WebCalendar repository — 5,580 commits, every
+event independently validated with Python's `icalendar`: UIDs unique, all
+timestamps UTC, no content line over 75 octets.
+
 ### Added
 
 - Initial implementation. Converts git history into an RFC 5545 iCalendar file.
@@ -46,4 +56,5 @@ treated as interface changes and called out explicitly.
 - Output is independently validated against Python's `icalendar` library, not
   only against php-icalendar-core's own parser.
 
-[Unreleased]: https://github.com/craigk5n/git2ics/commits/main
+[Unreleased]: https://github.com/craigk5n/git2ics/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/craigk5n/git2ics/releases/tag/v1.0.0
