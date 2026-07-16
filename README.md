@@ -144,14 +144,13 @@ Bug reports, feature requests and pull requests are welcome — see
 [CONTRIBUTING.md](CONTRIBUTING.md). Please report security issues privately, per
 [SECURITY.md](SECURITY.md).
 
-This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md).
+Participation is governed by the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Credits
 
 Built on [craigk5n/php-icalendar-core](https://github.com/craigk5n/php-icalendar-core),
 whose line folding handles multi-byte characters correctly — the reason git2ics
-is written in PHP. Bugs found in it while building this are documented in
-[ISSUES.md](ISSUES.md).
+is written in PHP.
 
 ## License
 

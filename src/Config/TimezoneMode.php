@@ -36,8 +36,7 @@ enum TimezoneMode: string
      *
      * It also runs into a parser bug in php-icalendar-core 1.1.5, which reads a
      * floating value back as UTC when the host's date.timezone is UTC — so a
-     * 14:46+09:00 commit round-trips as 14:46 UTC, nine hours adrift. See
-     * ISSUES.md #1.
+     * 14:46+09:00 commit round-trips as 14:46 UTC, nine hours adrift.
      */
     case Floating = 'local';
 }

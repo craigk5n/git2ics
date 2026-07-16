@@ -23,8 +23,7 @@ treated as interface changes and called out explicitly.
 - `--tz=utc|local`. Default `utc`: git records an author date with an explicit
   offset, so it hands us an unambiguous instant, and UTC carries it across
   exactly. `local` emits floating time instead, keeping the literal wall clock
-  but discarding the offset — and, as of php-icalendar-core 1.1.5, being read
-  back nine hours adrift (ISSUES.md #1).
+  but discarding the offset.
 - `--date=author|committer`. Default `author`, which survives rebase,
   cherry-pick and amend.
 - `--reproducible` pins `DTSTAMP` to the commit time, making output
@@ -46,7 +45,5 @@ treated as interface changes and called out explicitly.
   memory does not grow with history size.
 - Output is independently validated against Python's `icalendar` library, not
   only against php-icalendar-core's own parser.
-- See [ISSUES.md](ISSUES.md) for bugs found in php-icalendar-core while building
-  this, and the workarounds in place.
 
 [Unreleased]: https://github.com/craigk5n/git2ics/commits/main
