@@ -16,6 +16,7 @@ use K5n\Git2Ics\Clock\SystemClock;
 use K5n\Git2Ics\Config\ComponentType;
 use K5n\Git2Ics\Config\Config;
 use K5n\Git2Ics\Exception\Git2IcsException;
+use K5n\Git2Ics\Exception\OutputWriteException;
 use K5n\Git2Ics\Exception\UsageException;
 use K5n\Git2Ics\Git\CommitLogParser;
 use K5n\Git2Ics\Git\CommitUrlBuilder;
@@ -99,6 +100,14 @@ final class Application
                 $this->mapper($config, $info),
                 $config->calendarName ?? $info->name,
             );
+        } catch (OutputWriteException $e) {
+            // `git2ics | head` closes stdout once head has what it wants. That
+            // is ordinary shell usage, and every standard tool exits quietly —
+            // so complaining here would be noise on a successful command.
+            // A failed write to a named file is a genuine error, so re-throw.
+            if (!$config->writesToStdout()) {
+                throw $e;
+            }
         } finally {
             if (!$config->writesToStdout()) {
                 fclose($output);

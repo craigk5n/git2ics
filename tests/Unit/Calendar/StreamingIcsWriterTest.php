@@ -17,6 +17,7 @@ use K5n\Git2Ics\Calendar\VEventMapper;
 use K5n\Git2Ics\Clock\FrozenClock;
 use K5n\Git2Ics\Config\DateSource;
 use K5n\Git2Ics\Config\TimezoneMode;
+use K5n\Git2Ics\Exception\OutputWriteException;
 use K5n\Git2Ics\Git\Commit;
 use K5n\Git2Ics\Git\CommitUrlBuilder;
 use K5n\Git2Ics\Tests\CommitFactory;
@@ -145,6 +146,25 @@ final class StreamingIcsWriterTest extends TestCase
         foreach (explode("\r\n", $ics) as $line) {
             self::assertLessThanOrEqual(75, strlen($line));
         }
+    }
+
+    /**
+     * A failed write must surface as a distinct type, because the caller treats
+     * the two causes oppositely: a closed stdout (`git2ics | head`) is ordinary
+     * and silent, a failed write to a named file is an error. The writer cannot
+     * tell them apart, so it reports the fact and lets the caller decide.
+     *
+     * A read-only stream fails every write, exactly as a closed pipe does.
+     */
+    public function testWriteFailureIsReportedAsAnOutputWriteException(): void
+    {
+        $unwritable = fopen('php://memory', 'r');
+        self::assertIsResource($unwritable);
+
+        $this->expectException(OutputWriteException::class);
+        $this->expectExceptionMessageMatches('/could not write/i');
+
+        (new StreamingIcsWriter())->write($unwritable, [CommitFactory::create()], $this->mapper(), 'test-repo');
     }
 
     /**

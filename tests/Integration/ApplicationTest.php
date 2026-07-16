@@ -184,6 +184,77 @@ final class ApplicationTest extends TestCase
         self::assertCount(1, $calendar->getComponents('VEVENT'));
     }
 
+    /**
+     * `git2ics | head` closes stdout the moment head has its lines. Every
+     * standard tool exits quietly when that happens; complaining would put an
+     * error on the terminal after a command that did exactly what was asked.
+     *
+     * Driven through the real binary because the behaviour only exists when a
+     * real reader closes a real pipe.
+     */
+    public function testClosedStdoutPipeExitsQuietly(): void
+    {
+        $repo = $this->repo();
+        foreach (range(1, 30) as $i) {
+            $repo->commit("commit {$i}", "file{$i}.txt");
+        }
+
+        $binary = dirname(__DIR__, 2) . '/bin/git2ics';
+        $command = sprintf('%s %s 2>/tmp/git2ics-pipe-err.txt | head -3', escapeshellarg($binary), escapeshellarg($repo->path));
+
+        exec($command, $output, $exitCode);
+
+        self::assertSame(0, $exitCode, 'a closed stdout pipe must not be an error');
+        self::assertSame(
+            '',
+            trim((string) @file_get_contents('/tmp/git2ics-pipe-err.txt')),
+            'nothing should be printed to stderr when a reader simply stops reading',
+        );
+        self::assertSame('BEGIN:VCALENDAR', $output[0] ?? null);
+    }
+
+    /**
+     * The same behaviour as testClosedStdoutPipeExitsQuietly, but in-process so
+     * it is visible to coverage. A read-only stream makes every fwrite fail,
+     * exactly as a closed pipe does.
+     */
+    public function testWriteFailureOnStdoutIsSilent(): void
+    {
+        $repo = $this->repo();
+        $repo->commit('c');
+
+        $unwritable = fopen('php://memory', 'r');
+        self::assertIsResource($unwritable);
+
+        $exit = (new Application($unwritable, $this->stderr, FrozenClock::at(self::NOW)))
+            ->run(['bin/git2ics', $repo->path]);
+
+        self::assertSame(Application::EXIT_SUCCESS, $exit);
+        self::assertSame('', $this->err(), 'a reader that stopped reading is not an error');
+    }
+
+    /**
+     * The other half of the same decision: a write that fails to a named file is
+     * a real error and must be reported, however similar it looks internally.
+     *
+     * /dev/full accepts the open and fails every write with ENOSPC — a genuine
+     * disk-full, without needing to fill a disk.
+     */
+    public function testWriteFailureToAFileIsReported(): void
+    {
+        if (!file_exists('/dev/full')) {
+            self::markTestSkipped('/dev/full is not available on this platform');
+        }
+
+        $repo = $this->repo();
+        $repo->commit('c');
+
+        $exit = $this->invoke([$repo->path, '-o', '/dev/full']);
+
+        self::assertSame(Application::EXIT_FAILURE, $exit);
+        self::assertStringContainsString('could not write', $this->err());
+    }
+
     public function testUnwritableOutputFileIsAnError(): void
     {
         $repo = $this->repo();

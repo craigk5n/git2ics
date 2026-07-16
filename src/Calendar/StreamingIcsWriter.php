@@ -7,7 +7,7 @@ namespace K5n\Git2Ics\Calendar;
 use Icalendar\Component\VCalendar;
 use Icalendar\Writer\ComponentWriter;
 use Icalendar\Writer\ContentLineWriter;
-use K5n\Git2Ics\Exception\Git2IcsException;
+use K5n\Git2Ics\Exception\OutputWriteException;
 use K5n\Git2Ics\Git\Commit;
 use K5n\Git2Ics\Version;
 
@@ -84,15 +84,16 @@ final readonly class StreamingIcsWriter
 
     /**
      * @param resource $stream
+     *
+     * @throws OutputWriteException if the stream rejects the write, most often
+     *                              because a downstream reader closed the pipe
      */
     private function emit($stream, string $content): void
     {
         $written = @fwrite($stream, $this->contentLineWriter->write($content) . "\r\n");
 
-        // @codeCoverageIgnoreStart
         if ($written === false) {
-            throw new Git2IcsException('could not write to the output stream');
+            throw new OutputWriteException('could not write to the output stream');
         }
-        // @codeCoverageIgnoreEnd
     }
 }
