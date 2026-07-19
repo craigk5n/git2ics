@@ -11,6 +11,19 @@ treated as interface changes and called out explicitly.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-07-19
+
+### Added
+
+- `--category=LIST` adds a `CATEGORIES` property with the given comma-separated
+  list to every generated `VEVENT` or `VJOURNAL`.
+
+### Changed
+
+- Requires `php-icalendar-core` ^1.2. Its 1.2.0 parser fix means floating
+  `DTSTART` values (`--tz=local`) now survive a parse round trip; the `.ics`
+  git2ics writes was always correct, so generated output is unchanged.
+
 ## [1.0.0] - 2026-07-16
 
 First stable release. The CLI surface and the generated `.ics` are covered by
@@ -56,5 +69,6 @@ timestamps UTC, no content line over 75 octets.
 - Output is independently validated against Python's `icalendar` library, not
   only against php-icalendar-core's own parser.
 
-[Unreleased]: https://github.com/craigk5n/git2ics/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/craigk5n/git2ics/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/craigk5n/git2ics/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/craigk5n/git2ics/releases/tag/v1.0.0

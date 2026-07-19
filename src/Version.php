@@ -9,7 +9,7 @@ namespace K5n\Git2Ics;
  */
 final class Version
 {
-    public const VERSION = '1.0.0';
+    public const VERSION = '1.1.0';
 
     /**
      * PRODID value identifying this tool as the generator of a calendar.
