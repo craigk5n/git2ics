@@ -162,8 +162,7 @@ final class ApplicationTest extends TestCase
 
     /**
      * The end-to-end consequence of the default: what we write is what a parser
-     * reads back. Floating output is corrupted on the way back in by
-     * php-icalendar-core 1.1.5; UTC is not.
+     * reads back.
      */
     public function testDefaultOutputSurvivesAParseRoundTrip(): void
     {

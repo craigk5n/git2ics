@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c3314fe7b9e5e3b5f4237ad4d14c6893",
+    "content-hash": "532a2fd7630aa2608c6b90e8356a19f5",
     "packages": [
         {
             "name": "craigk5n/php-icalendar-core",
-            "version": "1.1.5",
+            "version": "1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/craigk5n/php-icalendar-core.git",
-                "reference": "0dc5ccdbbe25eaac564503668037f00133987dc0"
+                "reference": "9babd271a785ad85bf6d80352703b34f2447ec7d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/craigk5n/php-icalendar-core/zipball/0dc5ccdbbe25eaac564503668037f00133987dc0",
-                "reference": "0dc5ccdbbe25eaac564503668037f00133987dc0",
+                "url": "https://api.github.com/repos/craigk5n/php-icalendar-core/zipball/9babd271a785ad85bf6d80352703b34f2447ec7d",
+                "reference": "9babd271a785ad85bf6d80352703b34f2447ec7d",
                 "shasum": ""
             },
             "require": {
@@ -53,7 +53,7 @@
                 "issues": "https://github.com/craigk5n/php-icalendar-core/issues",
                 "source": "https://github.com/craigk5n/php-icalendar-core"
             },
-            "time": "2026-07-01T13:32:49+00:00"
+            "time": "2026-07-19T11:07:26+00:00"
         }
     ],
     "packages-dev": [

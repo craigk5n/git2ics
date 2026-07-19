@@ -130,14 +130,6 @@ a developer's own `~/.gitconfig` (`commit.gpgsign`, `core.autocrlf`) changes the
 SHAs and fixtures pass locally while failing in CI. See
 `tests/Integration/GitRepoFixture.php`.
 
-### Known upstream issue
-
-`php-icalendar-core` 1.1.5 promotes floating `DATE-TIME` values to UTC when
-parsing them back, if the host's `date.timezone` is `UTC` (the default on most
-servers and CI). git2ics's *output* is correct and unaffected — the bug is
-parse-side only. `RoundTripTest::testFloatingDtStartIsPromotedToUtcByTheParser`
-pins the current behaviour and will fail when the library is fixed.
-
 ## Contributing
 
 Bug reports, feature requests and pull requests are welcome — see

@@ -75,8 +75,7 @@ final class StreamingIcsWriterTest extends TestCase
         ];
 
         $streamed = $this->stream($commits);
-        $materialised = (new Writer())->write((new CalendarBuilder($this->mapper(), 'test-repo'))->build($commits))
-            . "\r\n"; // the streaming writer terminates the final line
+        $materialised = (new Writer())->write((new CalendarBuilder($this->mapper(), 'test-repo'))->build($commits));
 
         self::assertSame($materialised, $streamed);
     }

@@ -33,10 +33,6 @@ enum TimezoneMode: string
      * Keeps the wall clock the commit was made at, but *discards* the offset
      * git provided, so the event is no longer a fixed instant. Two commits made
      * at "09:00" in different timezones become indistinguishable.
-     *
-     * It also runs into a parser bug in php-icalendar-core 1.1.5, which reads a
-     * floating value back as UTC when the host's date.timezone is UTC — so a
-     * 14:46+09:00 commit round-trips as 14:46 UTC, nine hours adrift.
      */
     case Floating = 'local';
 }

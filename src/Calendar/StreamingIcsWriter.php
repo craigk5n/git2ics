@@ -38,8 +38,6 @@ final readonly class StreamingIcsWriter
      */
     public function write($stream, iterable $commits, ComponentMapper $mapper, ?string $calendarName = null): void
     {
-        $validator = new CalendarValidator();
-
         $this->emit($stream, 'BEGIN:VCALENDAR');
 
         foreach ($this->headerProperties($calendarName) as $line) {
@@ -51,7 +49,7 @@ final readonly class StreamingIcsWriter
 
             // The library's writer validates nothing, so a component missing its
             // required UID or DTSTAMP would stream out silently.
-            $validator->validate($component);
+            $component->validate();
 
             $this->emit($stream, $this->componentWriter->write($component));
         }

@@ -8,7 +8,6 @@ use Icalendar\Component\VCalendar;
 use Icalendar\Parser\Parser;
 use Icalendar\Writer\Writer;
 use K5n\Git2Ics\Calendar\CalendarBuilder;
-use K5n\Git2Ics\Calendar\CalendarValidator;
 use K5n\Git2Ics\Calendar\DescriptionFormatter;
 use K5n\Git2Ics\Calendar\IcsDateFormatter;
 use K5n\Git2Ics\Calendar\UidGenerator;
@@ -49,7 +48,7 @@ final class RoundTripTest extends TestCase
         );
 
         $calendar = (new CalendarBuilder($mapper, 'test-repo'))->build($commits);
-        (new CalendarValidator())->validate($calendar);
+        $calendar->validate();
 
         return (new Writer())->write($calendar);
     }
@@ -101,48 +100,22 @@ final class RoundTripTest extends TestCase
         );
         self::assertSame('fix: a representative subject', $this->firstEventProperty($calendar, 'SUMMARY'));
         self::assertSame('20260716T151122Z', $this->firstEventProperty($calendar, 'DTSTAMP'));
-
-        // DTSTART is asserted on the raw output instead, because the library's
-        // parser corrupts floating values on the way back in — see
-        // testFloatingDtStartIsPromotedToUtcByTheParser below.
+        self::assertSame('20260101T100000', $this->firstEventProperty($calendar, 'DTSTART'));
     }
 
     /**
-     * KNOWN UPSTREAM BUG — php-icalendar-core 1.1.5.
-     *
-     * We write `DTSTART:20260101T100000` (floating, correct — asserted by
-     * testFloatingDtStartHasNoZoneMarkerInTheRawOutput). Reading it back yields
-     * `20260101T100000Z`: a floating time silently promoted to an absolute UTC
-     * instant, which is a different event for every reader outside UTC.
-     *
-     * Cause: DateTimeParser::parseLocal() builds `new DateTimeImmutable($str)`
-     * with no timezone, so the value inherits PHP's date.timezone. When that is
-     * UTC — the default on most servers and CI — DateTimeValue::serialize()
-     * sees a UTC-named zone and appends `Z`. Under a non-UTC host the same input
-     * round-trips correctly, so the bug is environment-dependent and hides in
-     * exactly the configuration most production hosts use.
-     *
-     * Fix belongs upstream: DateTimeValue should record whether the source value
-     * carried a `Z`, rather than inferring UTC-ness from a timezone name that
-     * parseLocal() never meant to assign.
-     *
-     * This test pins the current behaviour deliberately. When the library is
-     * fixed it will fail, which is the signal to restore the assertion in
-     * testCoreFieldsSurviveTheRoundTrip to a true round trip.
+     * php-icalendar-core 1.1.5 promoted floating times to UTC on the way back
+     * in when the host's date.timezone was UTC; 1.2.0 fixed it. This guards
+     * against a regression: a floating DTSTART must come back without a `Z`.
      */
-    public function testFloatingDtStartIsPromotedToUtcByTheParser(): void
+    public function testFloatingDtStartSurvivesTheRoundTrip(): void
     {
         $ics = $this->buildIcs(CommitFactory::create(authorDate: '2026-01-01T10:00:00+09:00'));
         self::assertStringContainsString("DTSTART:20260101T100000\r\n", $ics, 'our output is floating');
 
         $parsed = (new Parser(Parser::STRICT))->parse($ics);
 
-        self::assertSame(
-            '20260101T100000Z',
-            $this->firstEventProperty($parsed, 'DTSTART'),
-            'upstream bug reproduced: if this now reads 20260101T100000, the '
-            . 'library is fixed and the round-trip assertion can be tightened',
-        );
+        self::assertSame('20260101T100000', $this->firstEventProperty($parsed, 'DTSTART'));
     }
 
     public function testZeroDurationSurvivesTheRoundTrip(): void
@@ -286,7 +259,7 @@ final class RoundTripTest extends TestCase
         $calendar = (new CalendarBuilder($mapper, 'test-repo'))->build([
             CommitFactory::create(rawBody: 'fix: 日本語 and 🎉'),
         ]);
-        (new CalendarValidator())->validate($calendar);
+        $calendar->validate();
 
         $ics = (new Writer())->write($calendar);
         $parsed = (new Parser(Parser::STRICT))->parse($ics);
