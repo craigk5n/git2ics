@@ -23,6 +23,9 @@ final readonly class VJournalMapper implements ComponentMapper
 {
     use MapsCommitTimestamps;
 
+    /**
+     * @param list<string> $categories CATEGORIES to apply; empty emits none.
+     */
     public function __construct(
         private UidGenerator $uidGenerator,
         private DescriptionFormatter $descriptionFormatter,
@@ -32,6 +35,7 @@ final readonly class VJournalMapper implements ComponentMapper
         private DateSource $dateSource,
         private TimezoneMode $timezoneMode,
         private bool $reproducible = false,
+        private array $categories = [],
     ) {
     }
 
@@ -55,6 +59,10 @@ final readonly class VJournalMapper implements ComponentMapper
             // RFC 5545 permits URL on a VJOURNAL, but unlike VEvent the library
             // exposes no setUrl() for it, so add the property directly.
             $journal->addProperty(GenericProperty::create('URL', $url));
+        }
+
+        if ($this->categories !== []) {
+            $journal->setCategories(...$this->categories);
         }
 
         return $journal;

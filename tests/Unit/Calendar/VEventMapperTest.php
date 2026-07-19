@@ -22,12 +22,16 @@ final class VEventMapperTest extends TestCase
 {
     private const NOW = '2026-07-16T15:11:22+00:00';
 
+    /**
+     * @param list<string> $categories
+     */
     private function mapper(
         TimezoneMode $tz = TimezoneMode::Utc,
         DateSource $dateSource = DateSource::Author,
         ?string $duration = null,
         bool $reproducible = false,
         ?string $remote = null,
+        array $categories = [],
     ): VEventMapper {
         $urlBuilder = new CommitUrlBuilder($remote);
 
@@ -41,6 +45,7 @@ final class VEventMapperTest extends TestCase
             timezoneMode: $tz,
             duration: $duration,
             reproducible: $reproducible,
+            categories: $categories,
         );
     }
 
@@ -212,6 +217,21 @@ final class VEventMapperTest extends TestCase
     public function testUrlIsAbsentWithoutARecognisedRemote(): void
     {
         self::assertNull($this->mapper()->map(CommitFactory::create())->getProperty('URL'));
+    }
+
+    public function testCategoriesAreAbsentByDefault(): void
+    {
+        self::assertNull($this->mapper()->map(CommitFactory::create())->getProperty('CATEGORIES'));
+    }
+
+    public function testCategoriesAreEmittedAsAcommaSeparatedList(): void
+    {
+        $mapper = $this->mapper(categories: ['git', 'release']);
+
+        self::assertSame(
+            'git,release',
+            $this->propertyValue($mapper->map(CommitFactory::create()), 'CATEGORIES'),
+        );
     }
 
     /**

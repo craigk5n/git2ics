@@ -13,8 +13,10 @@ use K5n\Git2Ics\Git\LogQuery;
 final readonly class Config
 {
     /**
-     * @param string|null $duration ISO 8601, already normalised. Null means a
-     *                              zero-duration event, which is the default.
+     * @param string|null  $duration   ISO 8601, already normalised. Null means a
+     *                                 zero-duration event, which is the default.
+     * @param list<string> $categories CATEGORIES applied to every component.
+     *                                 Empty — the default — emits no CATEGORIES.
      */
     public function __construct(
         public string $repositoryPath = '.',
@@ -27,6 +29,7 @@ final readonly class Config
         public ?string $calendarName = null,
         public string $uidDomain = UidGenerator::DEFAULT_DOMAIN,
         public bool $reproducible = false,
+        public array $categories = [],
     ) {
     }
 

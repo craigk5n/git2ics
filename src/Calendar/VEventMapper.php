@@ -28,8 +28,9 @@ final readonly class VEventMapper implements ComponentMapper
     use MapsCommitTimestamps;
 
     /**
-     * @param string|null $duration An ISO 8601 duration (e.g. PT15M), or null for
-     *                              a zero-duration event.
+     * @param string|null  $duration   An ISO 8601 duration (e.g. PT15M), or null
+     *                                 for a zero-duration event.
+     * @param list<string> $categories CATEGORIES to apply; empty emits none.
      */
     public function __construct(
         private UidGenerator $uidGenerator,
@@ -41,6 +42,7 @@ final readonly class VEventMapper implements ComponentMapper
         private TimezoneMode $timezoneMode,
         private ?string $duration = null,
         private bool $reproducible = false,
+        private array $categories = [],
     ) {
     }
 
@@ -67,6 +69,10 @@ final readonly class VEventMapper implements ComponentMapper
         $url = $this->urlBuilder->forSha($commit->sha);
         if ($url !== null) {
             $event->setUrl($url);
+        }
+
+        if ($this->categories !== []) {
+            $event->setCategories(...$this->categories);
         }
 
         return $event;

@@ -38,6 +38,7 @@ final class ArgumentParser
         'max-count',
         'calendar-name',
         'uid-domain',
+        'category',
     ];
 
     /** Long options that are switches. */
@@ -241,7 +242,28 @@ final class ArgumentParser
             calendarName: $values['calendar-name'] ?? null,
             uidDomain: $values['uid-domain'] ?? UidGenerator::DEFAULT_DOMAIN,
             reproducible: $flags['reproducible'] ?? false,
+            categories: isset($values['category']) ? $this->parseCategories($values['category']) : [],
         );
+    }
+
+    /**
+     * CATEGORIES is a comma-separated list (RFC 5545 §3.8.1.2). Split the value,
+     * trim each entry, and drop blanks so a stray comma never yields "",".
+     *
+     * @return list<string>
+     */
+    private function parseCategories(string $value): array
+    {
+        $categories = array_values(array_filter(
+            array_map('trim', explode(',', $value)),
+            static fn (string $category): bool => $category !== '',
+        ));
+
+        if ($categories === []) {
+            throw new UsageException(sprintf('invalid --category "%s": names no category', $value));
+        }
+
+        return $categories;
     }
 
     /**

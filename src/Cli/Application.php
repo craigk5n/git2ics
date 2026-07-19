@@ -146,6 +146,7 @@ final class Application
                 timezoneMode: $config->timezoneMode,
                 duration: $config->duration,
                 reproducible: $config->reproducible,
+                categories: $config->categories,
             ),
             ComponentType::Vjournal => new VJournalMapper(
                 uidGenerator: $uidGenerator,
@@ -156,6 +157,7 @@ final class Application
                 dateSource: $config->dateSource,
                 timezoneMode: $config->timezoneMode,
                 reproducible: $config->reproducible,
+                categories: $config->categories,
             ),
         };
     }

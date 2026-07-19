@@ -35,6 +35,8 @@ final class Usage
               --duration=SPEC     give events a length, e.g. 15m, 1h, 1h30m
                                   (default: zero-duration, per RFC 5545)
               --calendar-name=STR calendar display name        (default: repo name)
+              --category=LIST     CATEGORIES for every event, comma-separated,
+                                  e.g. git or git,release       (default: none)
 
         TIME
               --date=SOURCE       author | committer           (default: author)
@@ -65,6 +67,7 @@ final class Usage
           git2ics > activity.ics
           git2ics ~/programs/ilibgo --since=2026-01-01 -o ilibgo.ics
           git2ics --component=vjournal --no-merges
+          git2ics --category=git,release -o activity.ics
           git2ics -- src/
 
         HELP_TEXT;

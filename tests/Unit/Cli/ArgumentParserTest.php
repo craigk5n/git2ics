@@ -299,6 +299,40 @@ final class ArgumentParserTest extends TestCase
         self::assertSame('example.org', $this->parse(['--uid-domain=example.org'])->uidDomain);
     }
 
+    public function testCategoriesDefaultToNone(): void
+    {
+        self::assertSame([], $this->parse([])->categories);
+    }
+
+    public function testSingleCategory(): void
+    {
+        self::assertSame(['git'], $this->parse(['--category=git'])->categories);
+    }
+
+    public function testCommaSeparatedCategoriesSplitIntoAList(): void
+    {
+        self::assertSame(['git', 'release'], $this->parse(['--category=git,release'])->categories);
+    }
+
+    /**
+     * A trailing comma or padded entry is a typo, not an empty category: trim
+     * each and drop the blanks so CATEGORIES never carries a stray ",,".
+     */
+    public function testCategoriesAreTrimmedAndBlanksDropped(): void
+    {
+        self::assertSame(['git', 'release'], $this->parse(['--category= git , , release '])->categories);
+    }
+
+    /**
+     * "--category=,," survives the non-empty check but names no category, so the
+     * parser rejects it rather than silently emitting no CATEGORIES.
+     */
+    public function testAValueWithNoUsableCategoriesIsRejected(): void
+    {
+        $this->expectException(UsageException::class);
+        $this->parse(['--category=,,']);
+    }
+
     public function testReproducibleFlag(): void
     {
         self::assertTrue($this->parse(['--reproducible'])->reproducible);
